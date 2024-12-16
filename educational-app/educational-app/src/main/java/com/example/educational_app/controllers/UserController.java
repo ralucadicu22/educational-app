@@ -1,5 +1,6 @@
 package com.example.educational_app.controllers;
 
+
 import com.example.educational_app.entities.User;
 import com.example.educational_app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
