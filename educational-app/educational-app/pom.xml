@@ -90,9 +90,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-spring-security-adapter</artifactId>
-			<version>21.1.2</version>
-		</dependency>
+			<artifactId>keycloak-admin-client</artifactId>
+			<version>26.0.3</version>
+</dependency>
 
 	</dependencies>
 
