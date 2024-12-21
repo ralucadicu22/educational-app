@@ -1,11 +1,11 @@
 package com.example.educational_app.controllers;
-import com.example.educational_app.KeycloakHelper;
+
 import com.example.educational_app.entities.User;
 import com.example.educational_app.repository.UserRepository;
 import com.example.educational_app.service.UserService;
-import org.springframework.web.bind.annotation.*;
-import org.keycloak.admin.client.resource.RealmResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/register")
@@ -15,17 +15,29 @@ public class RegistrationController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public RegistrationController(UserService userService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public RegistrationController(
+            UserService userService,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping
-    public String register(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userService.addKeycloakUser(user);
+    public ResponseEntity<String> register(@RequestBody User user) {
+        String plainPassword = user.getPassword();
+        user.setPassword(passwordEncoder.encode(plainPassword));
+
+        User tempUser = new User();
+        tempUser.setUsername(user.getUsername());
+        tempUser.setPassword(plainPassword);
+        tempUser.setRole(user.getRole());
+
+        userService.addKeycloakUser(tempUser);
         userRepository.save(user);
-        return "User registered successfully";
+
+        return ResponseEntity.ok("User registered successfully");
     }
 }

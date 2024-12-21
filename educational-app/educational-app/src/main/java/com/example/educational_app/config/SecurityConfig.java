@@ -3,6 +3,7 @@ package com.example.educational_app.config;
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
+import org.keycloak.adapters.springsecurity.filter.KeycloakAuthenticationProcessingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +14,7 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
@@ -22,13 +24,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/register").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/quizzes/**").hasRole("STUDENT")
-                        .requestMatchers("/users/**").hasRole("TEACHER")
-                        .requestMatchers("/courses/**").hasAnyRole("STUDENT", "TEACHER")
+                        .requestMatchers("/quizzes/**").hasRole("Student")
+                        .requestMatchers("/users/**").hasRole("Teacher")
+                        .requestMatchers("/courses/**").hasAnyRole("Student", "Teacher")
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable());
