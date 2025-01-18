@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -33,15 +32,13 @@ public class AuthController {
 
         User dbUser = userRepository.findByUsername(user.getUsername());
         if (dbUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("User not found");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         }
         if (!passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Wrong user & password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wrong user & password");
         }
-        RestTemplate restTemplate = new RestTemplate();
 
+        RestTemplate restTemplate = new RestTemplate();
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "password");
         formData.add("client_id", clientId);
@@ -52,15 +49,10 @@ public class AuthController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpEntity<MultiValueMap<String, String>> requestEntity
-                = new HttpEntity<>(formData, headers);
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
 
         try {
-            ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(
-                    tokenUrl,
-                    requestEntity,
-                    Map.class
-            );
+            ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl, requestEntity, Map.class);
 
             if (tokenResponse.getStatusCode().is2xxSuccessful()) {
                 return ResponseEntity.ok(tokenResponse.getBody());

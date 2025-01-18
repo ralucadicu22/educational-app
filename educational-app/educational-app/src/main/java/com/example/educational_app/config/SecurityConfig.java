@@ -1,65 +1,79 @@
 package com.example.educational_app.config;
 
-import org.keycloak.adapters.KeycloakConfigResolver;
-import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
-import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
-import org.keycloak.adapters.springsecurity.filter.KeycloakAuthenticationProcessingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
-@EnableGlobalMethodSecurity(jsr250Enabled = true)
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/register", "/auth/**").permitAll()
+                .requestMatchers("/quizzes/**").hasRole("Student")
+                .requestMatchers("/users/**").hasRole("Teacher")
+                .requestMatchers("/courses/**").hasAnyRole("Student", "Teacher")
+                .anyRequest().authenticated()
+        );
 
-        http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/quizzes/**").hasRole("Student")
-                        .requestMatchers("/users/**").hasRole("Teacher")
-                        .requestMatchers("/courses/**").hasAnyRole("Student", "Teacher")
-                        .anyRequest().authenticated()
+        http.oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwt ->
+                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
-                .csrf(csrf -> csrf.disable());
+        );
+        http.csrf(csrf -> csrf.disable());
+        http.anonymous(anon -> anon.disable());
 
         return http.build();
     }
 
     @Bean
-    public KeycloakConfigResolver keycloakConfigResolver() {
-        return new KeycloakSpringBootConfigResolver();
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Collection<GrantedAuthority> authorities = new ArrayList<>();
+
+            JwtGrantedAuthoritiesConverter realmRolesConverter = new JwtGrantedAuthoritiesConverter();
+            realmRolesConverter.setAuthoritiesClaimName("realm_access.roles");
+            realmRolesConverter.setAuthorityPrefix("ROLE_");
+            authorities.addAll(realmRolesConverter.convert(jwt));
+
+            Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+            if (resourceAccess != null) {
+                Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("educational-web-app");
+                if (clientAccess != null) {
+                    List<String> clientRoles = (List<String>) clientAccess.get("roles");
+                    if (clientRoles != null) {
+                        for (String role : clientRoles) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                        }
+                    }
+                }
+            }
+            return authorities;
+        });
+
+        return jwtConverter;
+
     }
 
-    @Bean
-    public SessionAuthenticationStrategy sessionAuthenticationStrategy() {
-        return new RegisterSessionAuthenticationStrategy(new org.springframework.security.core.session.SessionRegistryImpl());
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-    }
-
-    @Bean
-    public KeycloakAuthenticationProvider keycloakAuthenticationProvider() {
-        KeycloakAuthenticationProvider provider = new KeycloakAuthenticationProvider();
-        provider.setGrantedAuthoritiesMapper(new SimpleAuthorityMapper());
-        return provider;
-    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

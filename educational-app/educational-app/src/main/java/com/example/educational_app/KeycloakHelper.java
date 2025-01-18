@@ -63,6 +63,7 @@ public class KeycloakHelper {
             password.setType(CredentialRepresentation.PASSWORD);
             password.setValue(user.getPassword());
             userResource.get(userId).resetPassword(password);
+
             return userId;
         } catch (WebApplicationException e) {
             throw new ResponseStatusException(
