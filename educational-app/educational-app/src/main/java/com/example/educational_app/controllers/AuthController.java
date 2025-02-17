@@ -3,6 +3,8 @@ package com.example.educational_app.controllers;
 import com.example.educational_app.entities.User;
 import com.example.educational_app.repository.UserRepository;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -65,4 +67,25 @@ public class AuthController {
                     .body("Failed to connect to Keycloak: " + e.getMessage());
         }
     }
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        if (jwt == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        }
+
+        String username = jwt.getClaim("preferred_username");
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "username", user.getUsername(),
+                "role", user.getRole(),
+                "email", user.getEmail()
+
+        ));
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.example.educational_app.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,7 +15,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+
+import javax.ws.rs.HttpMethod;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,24 +29,42 @@ import java.util.Map;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:5173");
+        configuration.setAllowCredentials(true);
+        configuration.addAllowedHeader("*");
+        configuration.addAllowedMethod("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/register", "/auth/**").permitAll()
-                .requestMatchers("/quizzes/**").hasRole("Student")
-                .requestMatchers("/users/**").hasRole("Teacher")
-                .requestMatchers("/courses/**").hasAnyRole("Student", "Teacher")
+                .requestMatchers(HttpMethod.POST, "/courses").hasRole("Teacher")
+                .requestMatchers(HttpMethod.POST, "/courses/enroll").hasRole("Student")
+                .requestMatchers(HttpMethod.GET, "/courses/my-created").hasRole("Teacher")
+                .requestMatchers(HttpMethod.GET, "/courses/my-enrolled").hasRole("Student")
+                .requestMatchers(HttpMethod.POST, "/course-files/upload").hasRole("Teacher")
+                .requestMatchers(HttpMethod.DELETE, "/course-files/{fileId}").hasRole("Teacher")
+                .requestMatchers(HttpMethod.POST, "/courses/create").hasRole("Teacher")
+                .requestMatchers(HttpMethod.GET, "/courses/{courseId}").hasAnyRole("Student", "Teacher")
+                .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                 .anyRequest().authenticated()
         );
-
         http.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwt ->
                         jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
         );
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http.csrf(csrf -> csrf.disable());
-        http.anonymous(anon -> anon.disable());
+
 
         return http.build();
     }
