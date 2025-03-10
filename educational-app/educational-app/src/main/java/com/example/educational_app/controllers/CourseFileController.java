@@ -69,6 +69,20 @@ public class CourseFileController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
+    @PostMapping("/add-video")
+    @PreAuthorize("hasRole('Teacher')")
+    public ResponseEntity<?> addVideo(@RequestParam Long courseId,
+                                      @RequestParam String title,
+                                      @RequestParam String videoUrl,
+                                      @RequestParam(required = false) Integer weekNumber) {
+
+        if (!videoUrl.contains("youtube.com") ) {
+            return ResponseEntity.badRequest().body("Invalid video URL.");
+        }
+
+        CourseFile video = courseFileService.uploadFile(courseId, title, videoUrl, "youtube", weekNumber);
+        return ResponseEntity.ok(video);
+    }
 
 
 

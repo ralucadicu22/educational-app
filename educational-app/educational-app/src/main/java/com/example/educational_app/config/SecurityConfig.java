@@ -54,6 +54,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/course-files/{fileId}").hasRole("Teacher")
                 .requestMatchers(HttpMethod.POST, "/courses/create").hasRole("Teacher")
                 .requestMatchers(HttpMethod.GET, "/courses/{courseId}").hasAnyRole("Student", "Teacher")
+                .requestMatchers(HttpMethod.POST, "/quizzes/create").hasRole("Teacher")
+                .requestMatchers(HttpMethod.GET, "/attempts/all/{quizId}").hasRole("Teacher")
+
+                .requestMatchers(HttpMethod.POST, "/attempts/submit/**").hasRole("Student")
+
                 .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                 .anyRequest().authenticated()
         );

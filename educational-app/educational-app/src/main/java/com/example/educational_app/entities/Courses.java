@@ -1,6 +1,8 @@
 package com.example.educational_app.entities;
 
 import com.example.educational_app.utils.CourseFile;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ public class Courses {
     @ManyToMany(mappedBy = "enrolledCourses")
     private Set<User> enrolledStudents = new HashSet<>();
     @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+
     private List<CourseFile> files = new ArrayList<>();
     private String joinCode;
 

@@ -1,55 +1,64 @@
 package com.example.educational_app.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
+@Table(name = "quiz")
 public class Quiz {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String title;
     private String content;
-    private int time;
-    public Quiz(){};
+    private Integer time;
 
-    public Quiz(String title, String content, int time) {
+    private Integer weekNumber;
+
+    @ManyToOne
+    @JsonIgnoreProperties({"files","creator","enrolledStudents","joinCode"})
+    private Courses course;
+
+    @JsonManagedReference("quiz-questions")
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Question> questions = new ArrayList<>();
+
+    public Quiz() {
+    }
+    public Quiz(String title, String content, Integer time, Courses course, Integer weekNumber) {
         this.title = title;
         this.content = content;
         this.time = time;
+        this.course = course;
+        this.weekNumber = weekNumber;
     }
 
-    public String getContent() {
-        return content;
-    }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
 
-    public Long getId() {
-        return id;
-    }
+    public Integer getTime() { return time; }
+    public void setTime(Integer time) { this.time = time; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Integer getWeekNumber() { return weekNumber; }
+    public void setWeekNumber(Integer weekNumber) { this.weekNumber = weekNumber; }
 
-    public int getTime() {
-        return time;
-    }
+    public Courses getCourse() { return course; }
+    public void setCourse(Courses course) { this.course = course; }
 
-    public void setTime(int time) {
-        this.time = time;
-    }
+    public List<Question> getQuestions() { return questions; }
+    public void setQuestions(List<Question> questions) { this.questions = questions; }
 }

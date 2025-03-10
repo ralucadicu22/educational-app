@@ -10,6 +10,10 @@ import com.example.educational_app.utils.KeycloakUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @Service
 public class CourseFileService {
 
@@ -43,6 +47,17 @@ public class CourseFileService {
             throw new RuntimeException("You are not the creator of this course.");
         }
 
+        if ("youtube".equalsIgnoreCase(fileType)) {
+            if (!fileUrl.contains("youtube.com") && !fileUrl.contains("youtu.be")) {
+                throw new RuntimeException("Invalid YouTube URL.");
+            }
+        } else {
+
+            Path filePath = Paths.get(fileUrl);
+            if (!Files.exists(filePath)) {
+                throw new RuntimeException("File does not exist on the server.");
+            }
+        }
 
         CourseFile cf = new CourseFile(fileName, fileUrl, fileType, course);
         cf.setWeekNumber(weekNumber);
