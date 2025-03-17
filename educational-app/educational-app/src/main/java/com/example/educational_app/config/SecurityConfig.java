@@ -56,10 +56,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/courses/{courseId}").hasAnyRole("Student", "Teacher")
                 .requestMatchers(HttpMethod.POST, "/quizzes/create").hasRole("Teacher")
                 .requestMatchers(HttpMethod.GET, "/attempts/all/{quizId}").hasRole("Teacher")
-
-                .requestMatchers(HttpMethod.POST, "/attempts/submit/**").hasRole("Student")
-
+                .requestMatchers(HttpMethod.POST, "/attempts/submit/*").hasRole("Student")
                 .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
+                .requestMatchers( "/attempts/leaderboard/course/*").hasAnyRole("Student", "Teacher")
+                .requestMatchers(
+                        "/forum/posts",
+                        "/forum/comments/*",
+                        "/forum/posts/{postId}").permitAll()
+                .requestMatchers(
+                        "/forum/posts/create",
+                        "/forum/comments",
+                        "/forum/comments/*/like/*",
+                        "/forum/comments/*/dislike/*",
+                        "/forum/comments/reply/*").authenticated()
                 .anyRequest().authenticated()
         );
         http.oauth2ResourceServer(oauth2 ->
