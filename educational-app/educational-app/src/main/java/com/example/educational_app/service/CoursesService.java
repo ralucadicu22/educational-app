@@ -8,6 +8,7 @@ import com.example.educational_app.utils.KeycloakUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -56,7 +57,7 @@ public class CoursesService {
 
         Courses course = coursesRepository.findByJoinCode(joinCode);
         if (course == null) {
-            return false; // Cod invalid
+            return false;
         }
 
         if (student.getEnrolledCourses().contains(course)) {
@@ -119,5 +120,20 @@ public class CoursesService {
 
         return course;
     }
+    public List<Courses> getCoursesByUser(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if ("Teacher".equalsIgnoreCase(user.getRole())) {
+            return coursesRepository.findByCreatorId(user.getId());
+        }
+        if ("Student".equalsIgnoreCase(user.getRole())) {
+            return coursesRepository.findAllByStudentId(user.getId());
+        }
+        return Collections.emptyList();
+    }
+
+
 
 }

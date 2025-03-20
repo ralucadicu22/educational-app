@@ -1,18 +1,18 @@
 package com.example.educational_app.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.*;
 
 @Entity
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String keycloakId;
-
     private String username;
     private String email;
     private String password;
@@ -27,6 +27,21 @@ public class User {
     @JsonIgnore
     private Set<Courses> enrolledCourses = new HashSet<>();
 
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("followerRef")
+    private List<Follow> following = new ArrayList<>();
+
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("followingRef")
+    private List<Follow> followers = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "user_subjects", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "subject")
+    private List<String> favoriteSubjects = new ArrayList<>();
+    @Transient
+    public int getFollowersCount() {
+        return followers != null ? followers.size() : 0;
+    }
     public User() {}
 
     public User(String keycloakId, String username, String email, String password, String role) {
@@ -60,4 +75,30 @@ public class User {
     public void setEnrolledCourses(Set<Courses> enrolledCourses) {
         this.enrolledCourses = enrolledCourses;
     }
+
+    public List<Follow> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(List<Follow> followers) {
+        this.followers = followers;
+    }
+
+    public List<Follow> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(List<Follow> following) {
+        this.following = following;
+    }
+
+    public List<String> getFavoriteSubjects() {
+        return favoriteSubjects;
+    }
+
+    public void setFavoriteSubjects(List<String> favoriteSubjects) {
+        this.favoriteSubjects = favoriteSubjects;
+    }
+
+
 }

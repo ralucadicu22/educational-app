@@ -36,15 +36,12 @@ public class CoursesController {
         return ResponseEntity.ok(joinCode);
     }
 
-
     @PostMapping("/join")
     @PreAuthorize("hasRole('Student')")
     public ResponseEntity<String> joinCourse(@RequestParam String joinCode) {
         boolean success = coursesService.enrollStudentByCode(joinCode);
         return success ? ResponseEntity.ok("Enrollment successful!") : ResponseEntity.badRequest().body("Invalid or expired code.");
     }
-
-
 
     @GetMapping("/my-created")
     @PreAuthorize("hasRole('Teacher')")
@@ -57,5 +54,10 @@ public class CoursesController {
     @PreAuthorize("hasRole('Student')")
     public List<Courses> getMyEnrolledCourses() {
         return coursesService.getMyEnrolledCourses();
+    }
+
+    @GetMapping("/by-user/{userId}")
+    public List<Courses> getCoursesByUser(@PathVariable Long userId) {
+        return coursesService.getCoursesByUser(userId);
     }
 }

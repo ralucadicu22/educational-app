@@ -71,7 +71,7 @@ public class AttemptService {
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
         List<User> students = course.getEnrolledStudents().stream()
-                .filter(user -> user.getRole().equals("Student")) // 📌 Excludem profesorii
+                .filter(user -> user.getRole().equals("Student"))
                 .collect(Collectors.toList());
 
         List<UserLeaderboard> leaderboard = new ArrayList<>();
