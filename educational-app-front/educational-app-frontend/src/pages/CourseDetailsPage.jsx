@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useParams, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 function CourseDetailsPage() {
     const { token, role } = useContext(AuthContext);
@@ -11,14 +12,35 @@ function CourseDetailsPage() {
     const [files, setFiles] = useState([]);
     const [quizzes, setQuizzes] = useState([]);
     const [error, setError] = useState(null);
+    const handleDownload = async (fileId, fileName) => {
+        try {
+            const response = await fetch(
+                `http://localhost:8081/course-files/download/${fileId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
+            if (!response.ok) throw new Error("Download failed");
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } catch (err) {
+            console.error("Error downloading file:", err);
+        }
+    };
     useEffect(() => {
         if (!courseId) {
             setError("Course ID is missing!");
             return;
         }
 
-        console.log("Fetching data for course ID:", courseId);
+
 
         fetch(`http://localhost:8081/courses/${courseId}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -53,8 +75,10 @@ function CourseDetailsPage() {
     if (error) return <div className="alert alert-danger">Error: {error}</div>;
     if (!course) return <p>Loading course...</p>;
 
+
     return (
         <div className="container mt-4">
+            <Navbar />
             <h1>{course.name}</h1>
             <p>{course.description}</p>
             {role === "Teacher" && (

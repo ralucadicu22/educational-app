@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 function CoursesPage() {
     const { token, role } = useContext(AuthContext);
@@ -87,14 +88,14 @@ function CoursesPage() {
     };
 
     return (
+
         <div className="container mt-5">
+            <Navbar />
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1 className="fw-bold">
                     {role === "Student" ? "📚 My Courses" : "📖 Courses I Teach"}
                 </h1>
-                <button className="btn btn-info btn-lg" onClick={() => navigate("/forum")}>
-                    💬 Open to stay updated about community discussions
-                </button>
+
             </div>
 
             {message && (

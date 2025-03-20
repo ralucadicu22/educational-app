@@ -32,6 +32,7 @@ function HomePage() {
                         🚪 Logout
                     </button>
                 )}
+
             </div>
         </div>
     );

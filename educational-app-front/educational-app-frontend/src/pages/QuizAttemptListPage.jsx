@@ -65,7 +65,7 @@ function QuizAttemptListPage() {
                     if (!nextAbove) {
                         setMotivationMessage("🚀 Keep going! Every point counts!");
                     } else {
-                        const neededPoints = nextAbove.totalScore - totalScore + 1;
+                        const neededPoints = nextAbove.totalScore - totalScore ;
                         setMotivationMessage(`📈 You're ranked #${studentRank}. You need ${neededPoints} more points to surpass ${nextAbove.username}!`);
                     }
                 }

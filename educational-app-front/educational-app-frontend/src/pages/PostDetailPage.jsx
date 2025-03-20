@@ -6,20 +6,10 @@ function PostDetailPage() {
     const { token, user } = useContext(AuthContext);
     const { postId } = useParams();
     const navigate = useNavigate();
-
-
     const [post, setPost] = useState(null);
-
-
     const [comments, setComments] = useState([]);
-
-
     const [newComment, setNewComment] = useState("");
-
-
     const [replyText, setReplyText] = useState({});
-
-
     const [error, setError] = useState("");
 
 
@@ -56,13 +46,26 @@ function PostDetailPage() {
             const updatedComments = await Promise.all(
                 data.map(async (comment) => {
 
-                    const likesRes = await fetch(`http://localhost:8081/forum/comments/${comment.id}/likes-count`);
-                    const dislikesRes = await fetch(`http://localhost:8081/forum/comments/${comment.id}/dislikes-count`);
+                    const likesRes = await fetch(`http://localhost:8081/forum/comments/${comment.id}/likes-count`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                    const dislikesRes = await fetch(`http://localhost:8081/forum/comments/${comment.id}/dislikes-count`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
                     const likes = likesRes.ok ? await likesRes.json() : 0;
                     const dislikes = dislikesRes.ok ? await dislikesRes.json() : 0;
 
 
-                    const repliesRes = await fetch(`http://localhost:8081/forum/comments/replies/${comment.id}`);
+                    const repliesRes = await fetch(`http://localhost:8081/forum/comments/replies/${comment.id}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
                     const replies = repliesRes.ok ? await repliesRes.json() : [];
 
                     return {

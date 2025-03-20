@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 function ForumPage() {
     const { token, user } = useContext(AuthContext);
@@ -86,6 +87,7 @@ function ForumPage() {
 
     return (
         <div className="container my-4">
+            <Navbar />
             <h1>📢Check the new topics</h1>
             {message && (
                 <div
