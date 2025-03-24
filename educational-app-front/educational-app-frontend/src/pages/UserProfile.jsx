@@ -2,8 +2,8 @@ import { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
 import { FollowContext } from "../context/FollowContext";
+import SendMessageForm from "./SendMessageForm";
 
-// Exemplu de subiecte favorite
 const availableInterests = ["Java", "AI", "Web Development", "Databases", "Cyber Security"];
 
 function UserProfile() {
@@ -16,6 +16,9 @@ function UserProfile() {
     const [mutualFriends, setMutualFriends] = useState([]);
     const [quizStats, setQuizStats] = useState({ completed: 0, averageScore: "N/A" });
     const [userCourses, setUserCourses] = useState([]);
+
+    const [showMessageForm, setShowMessageForm] = useState(false);
+
     const isMyProfile = user?.id === Number(id);
 
     useEffect(() => {
@@ -104,25 +107,56 @@ function UserProfile() {
             .catch(err => console.error(err));
     };
 
+    const handleMessageSent = () => {
+        setShowMessageForm(false);
+        alert("Message sent!");
+    };
+
     if (!profileUser) return <div className="text-center mt-5">Loading profile...</div>;
 
     return (
         <div className="container mt-5">
+
+            {/* Header */}
             <div className="text-center mb-4">
                 <h1 className="fw-bold">{profileUser.username}'s Profile</h1>
                 <p className="text-muted">{profileUser.email}</p>
 
-                {/* 🔹 Follow/Unfollow Button */}
-                {user?.id !== profileUser.id && (
-                    following.includes(profileUser.id) ? (
-                        <button className="btn btn-danger mb-3" onClick={() => unfollowUser(profileUser.id)}>
-                            Unfollow
+                {!isMyProfile && (
+                    <div className="mb-3">
+                        {following.includes(profileUser.id) ? (
+                            <button
+                                className="btn btn-danger me-2"
+                                onClick={() => unfollowUser(profileUser.id)}
+                            >
+                                Unfollow
+                            </button>
+                        ) : (
+                            <button
+                                className="btn btn-primary me-2"
+                                onClick={() => followUser(profileUser.id)}
+                            >
+                                Follow
+                            </button>
+                        )}
+
+                        <button
+                            className="btn btn-info"
+                            onClick={() => setShowMessageForm(!showMessageForm)}
+                        >
+                            Message
                         </button>
-                    ) : (
-                        <button className="btn btn-primary mb-3" onClick={() => followUser(profileUser.id)}>
-                            Follow
-                        </button>
-                    )
+                    </div>
+                )}
+
+                {showMessageForm && (
+                    <div className="card p-3 mt-3">
+                        <h5>Send a Message to {profileUser.username}</h5>
+                        <SendMessageForm
+                            recipientId={profileUser.id}
+                            onMessageSent={handleMessageSent}
+                        />
+                    </div>
                 )}
             </div>
 
@@ -131,16 +165,23 @@ function UserProfile() {
                 <ul className="list-group">
                     {profileUser.role !== "Teacher" && (
                         <>
-                            <li className="list-group-item">✅ Quizzes Completed: {quizStats.completed}</li>
-                            <li className="list-group-item">📈 Average Score: {quizStats.averageScore}</li>
+                            <li className="list-group-item">
+                                ✅ Quizzes Completed: {quizStats.completed}
+                            </li>
+                            <li className="list-group-item">
+                                📈 Average Score: {quizStats.averageScore}
+                            </li>
                         </>
                     )}
-                    <li className="list-group-item">🗣️ Forum Posts: {profileUser.forumPosts || 0}</li>
-                    <li className="list-group-item">🫂 Followers: {profileUser.followersCount || 0}</li>
+                    <li className="list-group-item">
+                        🗣️ Forum Posts: {profileUser.forumPosts || 0}
+                    </li>
+                    <li className="list-group-item">
+                        🫂 Followers: {profileUser.followersCount || 0}
+                    </li>
                 </ul>
             </div>
 
-            {/* 🔹 Interests Section */}
             <div className="card p-4 mb-4 shadow-sm">
                 <h3 className="fw-bold">🎯 Interests</h3>
                 {isMyProfile ? (
@@ -157,7 +198,9 @@ function UserProfile() {
                                 </label>
                             ))}
                         </div>
-                        <button className="btn btn-success" onClick={saveInterests}>Save Interests</button>
+                        <button className="btn btn-success" onClick={saveInterests}>
+                            Save Interests
+                        </button>
                     </>
                 ) : (
                     <p className="text-muted">
@@ -182,10 +225,11 @@ function UserProfile() {
                 )}
             </div>
 
-
             <div className="card p-4 mb-4 shadow-sm">
                 <h3 className="fw-bold">
-                    {profileUser.role === "Teacher" ? "📖 Courses Taught" : "📚 Enrolled Courses"}
+                    {profileUser.role === "Teacher"
+                        ? "📖 Courses Taught"
+                        : "📚 Enrolled Courses"}
                 </h3>
                 {userCourses.length === 0 ? (
                     <p className="text-muted">No courses found.</p>

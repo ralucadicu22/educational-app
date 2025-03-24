@@ -15,6 +15,8 @@ import UserList from "./pages/UserList";
 import UserProfile from "./pages/UserProfile";
 import { AuthProvider } from "./context/AuthProvider";
 import { FollowProvider } from "./context/FollowContext";
+import MessagesPage from "./pages/MessagesPage";
+import ConversationPage from "./pages/ConversationPage";
 
 
 function App() {
@@ -39,6 +41,8 @@ function App() {
                         <Route path="/forum/:postId" element={<PostDetailPage />} />
                         <Route path="/users" element={<UserList />} />
                         <Route path="/users/:id" element={<UserProfile />} />
+                        <Route path="/messages" element={<MessagesPage />} />
+                        <Route path="/conversation/:otherUserId" element={<ConversationPage />} />
                     </Routes>
 
             </FollowProvider>
