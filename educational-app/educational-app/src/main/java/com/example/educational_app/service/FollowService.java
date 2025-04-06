@@ -71,4 +71,11 @@ public class FollowService {
                 .filter(user2Friends::contains)
                 .collect(Collectors.toList());
     }
+    public boolean isFollowing(Long followerId, Long followingId) {
+        User follower = userRepository.findById(followerId)
+                .orElseThrow(() -> new RuntimeException("Follower not found"));
+        User following = userRepository.findById(followingId)
+                .orElseThrow(() -> new RuntimeException("Following not found"));
+        return followRepository.existsByFollowerAndFollowing(follower, following);
+    }
 }

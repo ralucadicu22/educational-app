@@ -16,8 +16,14 @@ public class MessageService {
     private MessageRepository messageRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private FollowService followService;
 
     public Message sendMessage(Long senderId, Long recipientId, String content) {
+        if (!followService.isFollowing(senderId, recipientId)) {
+            throw new RuntimeException("You must follow this user to send a message.");
+        }
+
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new RuntimeException("Sender not found"));
         User recipient = userRepository.findById(recipientId)

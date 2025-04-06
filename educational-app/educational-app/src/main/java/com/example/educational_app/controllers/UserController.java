@@ -4,7 +4,10 @@ package com.example.educational_app.controllers;
 import com.example.educational_app.entities.User;
 import com.example.educational_app.repository.FollowRepository;
 import com.example.educational_app.repository.UserRepository;
+import com.example.educational_app.service.FollowService;
+import com.example.educational_app.utils.KeycloakUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,8 @@ public class UserController {
     private UserRepository userRepository;
     @Autowired
     private FollowRepository followRepository;
+    @Autowired
+    private FollowService followService;
 
 
     @PostMapping
@@ -33,11 +38,20 @@ public class UserController {
         return userRepository.findAll();
     }
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id=" + id));
+    public ResponseEntity<User> getUserProfile(@PathVariable Long id) {
+        String keycloakId = KeycloakUtil.getKeycloakIdFromToken();
+        User currentUser = userRepository.findByKeycloakId(keycloakId);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        return ResponseEntity.ok(user);
+        if (!currentUser.getId().equals(id) && !followService.isFollowing(currentUser.getId(), id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return userRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     @PutMapping("/{id}/update-subjects")
     @PreAuthorize("hasRole('Student') or hasRole('Teacher')")

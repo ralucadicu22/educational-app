@@ -46,18 +46,18 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/register", "/auth/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/courses").hasRole("Teacher")
-                .requestMatchers(HttpMethod.POST, "/courses/enroll").hasRole("Student")
-                .requestMatchers(HttpMethod.GET, "/courses/my-created").hasRole("Teacher")
-                .requestMatchers(HttpMethod.GET, "/courses/my-enrolled").hasRole("Student")
-                .requestMatchers(HttpMethod.POST, "/course-files/upload").hasRole("Teacher")
-                .requestMatchers(HttpMethod.DELETE, "/course-files/{fileId}").hasRole("Teacher")
-                .requestMatchers(HttpMethod.POST, "/courses/create").hasRole("Teacher")
-                .requestMatchers(HttpMethod.GET, "/courses/{courseId}").hasAnyRole("Student", "Teacher")
-                .requestMatchers(HttpMethod.POST, "/quizzes/create").hasRole("Teacher")
-                .requestMatchers(HttpMethod.GET, "/attempts/all/{quizId}").hasRole("Teacher")
-                .requestMatchers(HttpMethod.POST, "/attempts/submit/*").hasRole("Student")
-                .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
+                .requestMatchers( "/courses").hasRole("Teacher")
+                .requestMatchers( "/courses/enroll").hasRole("Student")
+                .requestMatchers( "/courses/my-created").hasRole("Teacher")
+                .requestMatchers( "/courses/my-enrolled").hasRole("Student")
+                .requestMatchers( "/course-files/upload").hasRole("Teacher")
+                .requestMatchers( "/course-files/{fileId}").hasRole("Teacher")
+                .requestMatchers("/courses/create").hasRole("Teacher")
+                .requestMatchers( "/courses/{courseId}").hasAnyRole("Student", "Teacher")
+                .requestMatchers( "/quizzes/create").hasRole("Teacher")
+                .requestMatchers("/attempts/all/{quizId}").hasRole("Teacher")
+                .requestMatchers( "/attempts/submit/*").hasRole("Student")
+                .requestMatchers("/auth/me").authenticated()
                 .requestMatchers( "/attempts/leaderboard/course/*").hasAnyRole("Student", "Teacher")
                 .requestMatchers(
                         "/forum/posts",
@@ -69,6 +69,7 @@ public class SecurityConfig {
                         "/forum/comments/*/like/*",
                         "/forum/comments/*/dislike/*",
                         "/forum/comments/reply/*").authenticated()
+                .requestMatchers("/chatbot").authenticated()
                 .anyRequest().authenticated()
         );
         http.oauth2ResourceServer(oauth2 ->
