@@ -20,6 +20,12 @@ public class CoursesService {
     @Autowired
     private CoursesRepository coursesRepository;
 
+    public CoursesService(CoursesRepository coursesRepository,
+                          UserRepository userRepository) {
+        this.coursesRepository = coursesRepository;
+        this.userRepository   = userRepository;
+    }
+
     public Courses createCourse(String name, String description) {
         String keycloakId = KeycloakUtil.getKeycloakIdFromToken();
         if (keycloakId == null) {
@@ -133,7 +139,21 @@ public class CoursesService {
         }
         return Collections.emptyList();
     }
+    public Courses updateCourse(Long courseId, String name, String description) {
+        String keycloakId = KeycloakUtil.getKeycloakIdFromToken();
+        User user = userRepository.findByKeycloakId(keycloakId);
 
+        Courses course = coursesRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        if (!course.getCreator().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized to edit this course.");
+        }
+
+        course.setName(name);
+        course.setDescription(description);
+        return coursesRepository.save(course);
+    }
 
 
 }

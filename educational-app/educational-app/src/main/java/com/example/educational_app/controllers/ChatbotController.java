@@ -10,11 +10,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.JsonPath;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,6 +94,54 @@ public class ChatbotController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed: " + e.getMessage());
         }
+    }
+    @PostMapping("/recommendations")
+    public ResponseEntity<List<String>> recommendCourses() {
+        String keycloakId = KeycloakUtil.getKeycloakIdFromToken();
+        User user = userRepository.findByKeycloakId(keycloakId);
+        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        List<String> subjects = user.getFavoriteSubjects();
+        List<Courses> enrolled = coursesService.getCoursesByUser(user.getId());
+        String enrolledNames = enrolled.stream()
+                .map(Courses::getName)
+                .collect(Collectors.joining(", "));
+        String subjList = subjects.isEmpty() ? "none" : String.join(", ", subjects);
+
+        String prompt = String.format(
+                "You are an educational recommender. The user likes: %s. " +
+                        "They are already enrolled in: %s. " +
+                        "Suggest 5 new course titles (comma‑separated) relevant to their interests.",
+                subjList, enrolledNames
+        );
+
+        ObjectNode payload = new ObjectMapper().createObjectNode();
+        payload.put("model", "codellama");
+        payload.put("prompt", prompt);
+        payload.put("stream", false);
+
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> req;
+        try {
+            req = new HttpEntity<>(new ObjectMapper().writeValueAsString(payload), h);
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        ResponseEntity<String> resp =
+                restTemplate.postForEntity("http://localhost:11434/api/generate", req, String.class);
+
+        if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        String aiText = JsonPath.read(resp.getBody(), "$.response");
+        List<String> recs = Arrays.stream(aiText.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(recs);
     }
 
 }

@@ -39,9 +39,17 @@ public class AttemptService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
-        List<Question> questions = questionRepository.findByQuizId(quizId);
+        List<UserAttempt> existingAttempts = userAttemptRepository.findByUserId(user.getId());
+        boolean alreadyAttempted = existingAttempts.stream()
+                .anyMatch(a -> a.getQuiz().getId().equals(quizId));
 
+        if (alreadyAttempted) {
+            throw new RuntimeException("You have already submitted this quiz.");
+        }
+
+        List<Question> questions = questionRepository.findByQuizId(quizId);
         int totalScore = 0;
+
         for (Question question : questions) {
             List<Answer> correctAnswers = answerRepository.findByQuestionAndCorrect(question, true);
             for (Answer correctAnswer : correctAnswers) {
@@ -50,9 +58,11 @@ public class AttemptService {
                 }
             }
         }
+
         UserAttempt attempt = new UserAttempt(user, quiz, totalScore, selectedAnswerIds);
         return userAttemptRepository.save(attempt);
     }
+
 
     public List<UserAttempt> getAttemptsByUser(Long userId) {
         return userAttemptRepository.findByUserId(userId);

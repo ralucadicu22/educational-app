@@ -3,6 +3,7 @@ package com.example.educational_app.controllers;
 import com.example.educational_app.entities.User;
 import com.example.educational_app.entities.UserAttempt;
 import com.example.educational_app.entities.UserLeaderboard;
+import com.example.educational_app.repository.AttemptRepository;
 import com.example.educational_app.repository.UserRepository;
 import com.example.educational_app.service.AttemptService;
 import com.example.educational_app.utils.KeycloakUtil;
@@ -22,6 +23,8 @@ public class AttemptController {
     private AttemptService attemptService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private AttemptRepository userAttemptRepository;
 
     @PostMapping("/submit/{quizId}")
     public ResponseEntity<UserAttempt> submitAttempt(@PathVariable Long quizId,
@@ -45,6 +48,19 @@ public class AttemptController {
         List<UserLeaderboard> leaderboard = attemptService.getLeaderboardForCourse(courseId);
         return ResponseEntity.ok(leaderboard);
     }
+
+    @GetMapping("/{quizId}/can-attempt")
+    @PreAuthorize("hasRole('Student')")
+    public ResponseEntity<Boolean> canAttemptQuiz(@PathVariable Long quizId) {
+        String keycloakId = KeycloakUtil.getKeycloakIdFromToken();
+        User user = userRepository.findByKeycloakId(keycloakId);
+
+        List<UserAttempt> attempts = userAttemptRepository.findByUserId(user.getId());
+        boolean canAttempt = attempts.stream().noneMatch(a -> a.getQuiz().getId().equals(quizId));
+
+        return ResponseEntity.ok(canAttempt);
+    }
+
 
 
 }

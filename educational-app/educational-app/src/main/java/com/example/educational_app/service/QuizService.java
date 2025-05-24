@@ -60,4 +60,32 @@ public class QuizService {
     public List<Quiz> getQuizzesByCourse(Long courseId) {
         return quizRepository.findByCourseId(courseId);
     }
+
+    public Quiz updateQuiz(Long quizId, Quiz updatedQuiz) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        quiz.setTitle(updatedQuiz.getTitle());
+        quiz.setContent(updatedQuiz.getContent());
+        quiz.setTime(updatedQuiz.getTime());
+        quiz.setWeekNumber(updatedQuiz.getWeekNumber());
+
+        List<Question> existingQuestions = quiz.getQuestions();
+        existingQuestions.clear();
+
+        if (updatedQuiz.getQuestions() != null) {
+            for (Question q : updatedQuiz.getQuestions()) {
+                q.setQuiz(quiz);
+                if (q.getAnswers() != null) {
+                    for (Answer a : q.getAnswers()) {
+                        a.setQuestion(q);
+                    }
+                }
+                existingQuestions.add(q);
+            }
+        }
+
+        return quizRepository.save(quiz);
+    }
+
 }

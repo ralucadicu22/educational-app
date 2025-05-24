@@ -60,4 +60,11 @@ public class CoursesController {
     public List<Courses> getCoursesByUser(@PathVariable Long userId) {
         return coursesService.getCoursesByUser(userId);
     }
+
+    @PutMapping("/{courseId}/edit")
+    @PreAuthorize("hasRole('Teacher')")
+    public ResponseEntity<Courses> updateCourse(@PathVariable Long courseId, @RequestBody Courses updatedCourse) {
+        Courses course = coursesService.updateCourse(courseId, updatedCourse.getName(), updatedCourse.getDescription());
+        return ResponseEntity.ok(course);
+    }
 }

@@ -47,4 +47,12 @@ public class QuizController {
     public ResponseEntity<List<Quiz>> getQuizzesByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(quizService.getQuizzesByCourse(courseId));
     }
+    @PutMapping("/{quizId}/edit")
+    @PreAuthorize("hasRole('Teacher')")
+    public ResponseEntity<Quiz> updateQuiz(@PathVariable Long quizId, @RequestBody Quiz updatedQuiz) {
+        Quiz quiz = quizService.updateQuiz(quizId, updatedQuiz);
+        return ResponseEntity.ok(quiz);
+    }
+
+
 }
