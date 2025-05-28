@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 
+
 function SendMessageForm({ recipientId, onMessageSent }) {
     const { token } = useContext(AuthContext);
     const [content, setContent] = useState("");
@@ -19,22 +20,25 @@ function SendMessageForm({ recipientId, onMessageSent }) {
             .then((data) => {
                 setContent("");
                 if (onMessageSent) onMessageSent(data);
-                alert("Message sent successfully!");
             })
             .catch((err) => console.error("Error sending message:", err));
     };
 
     return (
         <div className="my-3">
-            <h5>Send a Message</h5>
-            <textarea
-                className="form-control mb-2"
-                placeholder="Type your message..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-            />
-            <button className="btn btn-primary" onClick={handleSend}>
-                Send
+  <textarea
+      className="form-control mb-2"
+      placeholder="Type your message..."
+      value={content}
+      onChange={(e) => setContent(e.target.value)}
+      style={{ borderRadius: "12px", minHeight: "80px" }}
+  />
+            <button
+                className="btn fw-semibold"
+                style={{ backgroundColor: "#6f42c1", color: "#fff", borderRadius: "12px" }}
+                onClick={handleSend}
+            >
+                📤 Send
             </button>
         </div>
     );

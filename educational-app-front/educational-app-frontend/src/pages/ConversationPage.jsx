@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
+
 function ConversationPage() {
     const { otherUserId } = useParams();
     const { user, token } = useContext(AuthContext);
@@ -8,6 +9,7 @@ function ConversationPage() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [otherUser, setOtherUser] = useState(null);
+
     useEffect(() => {
         if (!otherUserId) return;
 
@@ -16,18 +18,16 @@ function ConversationPage() {
         })
             .then((res) => res.json())
             .then((data) => setOtherUser(data))
-            .catch((err) => console.error("Error fetching other user:", err));
+            .catch(console.error);
     }, [otherUserId, token]);
 
     useEffect(() => {
-        if (!otherUserId) return;
-
         fetch(`http://localhost:8081/messages/conversation/${otherUserId}`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())
             .then((data) => setMessages(data))
-            .catch((err) => console.error("Error fetching conversation:", err));
+            .catch(console.error);
     }, [otherUserId, token]);
 
     const handleSend = () => {
@@ -45,66 +45,66 @@ function ConversationPage() {
                 setMessages((prev) => [...prev, msg]);
                 setNewMessage("");
             })
-            .catch((err) => console.error("Error sending message:", err));
+            .catch(console.error);
     };
 
     return (
-        <div className="container mt-4">
-            <h2 className="fw-bold mb-4">
-                Conversation with{" "}
-                {otherUser?.username ? otherUser.username : `User ${otherUserId}`}
-            </h2>
+        <div className="container my-5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h1 className="text-center fw-bold mb-4" style={{ color: "#2c2c2c" }}>
+                Conversation with {otherUser?.username || `User ${otherUserId}`}
+            </h1>
+
             <div
-                className="p-3 mb-3"
+                className="p-4 mb-4 rounded"
                 style={{
-                    border: "1px solid #ccc",
-                    borderRadius: "5px",
-                    maxHeight: "400px",
+                    backgroundColor: "#f9f6f0",
+                    border: "1px solid #e0d4f7",
+                    maxHeight: 400,
                     overflowY: "auto",
-                    backgroundColor: "#f8f9fa",
+                    borderRadius: "16px",
                 }}
             >
-                {messages.length === 0 && (
-                    <p className="text-muted">No messages yet. Say hi!</p>
-                )}
+                {messages.length === 0 && <p className="text-muted">No messages yet. Say hi! 👋</p>}
+
                 {messages.map((m) => {
                     const isMine = m.sender.id === user.id;
-
                     return (
-                        <div key={m.id} className="mb-3">
-                            <div className="fw-bold" style={{ fontSize: "0.9rem" }}>
-                                {m.sender.username}:
-                            </div>
+                        <div key={m.id} className="mb-3 d-flex flex-column align-items-start">
                             <div
-                                className="p-2"
+                                className="p-3 shadow-sm"
                                 style={{
-                                    backgroundColor: isMine ? "#d1ecf1" : "#ffffff",
-                                    borderRadius: "5px",
-                                    display: "inline-block",
+                                    backgroundColor: isMine ? "#dcd3f2" : "#fff",
+                                    borderRadius: "12px",
+                                    maxWidth: "80%",
+                                    alignSelf: isMine ? "flex-end" : "flex-start",
                                 }}
                             >
-                                {m.content}
+                                <div className="fw-semibold mb-1">{m.sender.username}</div>
+                                <div>{m.content}</div>
                             </div>
-                            <div className="text-muted" style={{ fontSize: "0.8rem" }}>
+                            <div className="text-muted small mt-1">
                                 {new Date(m.sentTime).toLocaleString()}
                             </div>
                         </div>
                     );
                 })}
             </div>
+
             <div className="input-group">
-        <textarea
-            className="form-control"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-        />
-                <button className="btn btn-primary" onClick={handleSend}>
-                    Send
+    <textarea
+        className="form-control"
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+        placeholder="Type your message..."
+        style={{ borderRadius: "12px" }}
+    />
+                <button className="btn btn-purple fw-semibold" onClick={handleSend}>
+                    📤 Send
                 </button>
             </div>
         </div>
     );
+
 }
 
 export default ConversationPage;

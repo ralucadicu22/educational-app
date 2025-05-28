@@ -1,7 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 
 function ForumPage() {
     const { token, user } = useContext(AuthContext);
@@ -13,31 +12,21 @@ function ForumPage() {
     const [category, setCategory] = useState("");
     const [message, setMessage] = useState("");
 
-
     useEffect(() => {
         if (!token) return;
 
         fetch("http://localhost:8081/forum/posts", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
         })
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to fetch posts.");
-                return res.json();
-            })
-            .then((data) => setPosts(data))
-            .catch((err) => {
-                console.error(err);
-                setMessage(err.message);
-            });
+            .then((res) => res.json())
+            .then(setPosts)
+            .catch((err) => setMessage("❌ Failed to fetch posts."));
     }, [token]);
 
     const handleCreatePost = async (e) => {
         e.preventDefault();
-
         if (!title.trim() || !content.trim()) {
-            setMessage(" Title and content are required.");
+            setMessage("⚠️ Title and content are required.");
             return;
         }
 
@@ -58,26 +47,20 @@ function ForumPage() {
                 body: JSON.stringify(newPost),
             });
 
-            if (!response.ok) {
-                const text = await response.text();
-                throw new Error("Could not create post: " + text);
-            }
+            if (!response.ok) throw new Error("❌ Could not create post.");
 
-            setMessage("Post created!");
+            setMessage("✅ Post created!");
             setTitle("");
             setContent("");
             setCategory("");
 
-            fetch("http://localhost:8081/forum/posts", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-                .then((res) => res.json())
-                .then((data) => setPosts(data));
+            const updated = await fetch("http://localhost:8081/forum/posts", {
+                headers: { Authorization: `Bearer ${token}` },
+            }).then((res) => res.json());
+
+            setPosts(updated);
         } catch (err) {
-            console.error(err);
-            setMessage("" + err.message);
+            setMessage(err.message);
         }
     };
 
@@ -86,20 +69,24 @@ function ForumPage() {
     }
 
     return (
-        <div className="container my-4">
-            <Navbar />
-            <h1>📢Check the new topics</h1>
+        <div className="container my-5" style={{ fontFamily: "'Rubik', sans-serif" }}>
+            <h1 className="fw-bold mb-4 text-purple">📢 Forum</h1>
+
             {message && (
                 <div
-                    className={`alert ${
+                    className={`alert text-center fw-semibold ${
                         message.startsWith("✅") ? "alert-success" : "alert-warning"
                     }`}
                 >
                     {message}
                 </div>
             )}
-            <div className="card p-3 mb-4 shadow-sm">
-                <h3 className="mb-3">Create a New Post</h3>
+
+            <div
+                className="card p-4 mb-5 shadow-sm"
+                style={{ borderRadius: "16px", backgroundColor: "#fffaf4" }}
+            >
+                <h4 className="fw-semibold mb-3">✍️ Create a New Post</h4>
                 <form onSubmit={handleCreatePost}>
                     <input
                         type="text"
@@ -109,7 +96,7 @@ function ForumPage() {
                         onChange={(e) => setTitle(e.target.value)}
                     />
                     <textarea
-                        placeholder="Content"
+                        placeholder="Write your thoughts..."
                         className="form-control mb-2"
                         rows={4}
                         value={content}
@@ -122,39 +109,60 @@ function ForumPage() {
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
                     />
-                    <button type="submit" className="btn btn-primary">
-                        Add Post
+                    <button
+                        type="submit"
+                        className="btn fw-semibold text-white"
+                        style={{
+                            backgroundColor: "#6f42c1",
+                            borderRadius: "10px",
+                            boxShadow: "0 3px 8px rgba(0, 0, 0, 0.1)",
+                        }}
+                    >
+                        ➕ Add Post
                     </button>
                 </form>
             </div>
 
-            <h3 className="mb-3">All Posts</h3>
+            <h4 className="fw-bold mb-4">🗂 All Posts</h4>
             {posts.length === 0 ? (
-                <p className="text-muted">No posts yet.</p>
+                <p className="text-muted">No posts yet. Be the first to post something!</p>
             ) : (
                 <div className="row">
                     {posts.map((post) => (
-                        <div key={post.id} className="col-md-6 col-lg-4 mb-3">
+                        <div key={post.id} className="col-md-6 col-lg-4 mb-4">
                             <div
-                                className="card h-100 shadow-sm"
-                                style={{ cursor: "pointer" }}
+                                className="card h-100 shadow-sm p-3"
                                 onClick={() => navigate(`/forum/${post.id}`)}
+                                style={{
+                                    borderRadius: "14px",
+                                    cursor: "pointer",
+                                    transition: "transform 0.2s",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                             >
-                                <div className="card-body">
-                                    <h5 className="card-title">{post.title}</h5>
-                                    <p className="card-text">
-                                        {post.content?.length > 70
-                                            ? post.content.substring(0, 70) + "..."
-                                            : post.content}
-                                    </p>
-                                    {post.category && (
-                                        <span className="badge bg-info text-dark">{post.category}</span>
-                                    )}
-                                    <div className="mt-3 text-end">
-                                        <small className="text-muted">
-                                            By {post.author?.username || "Anonymous"}
-                                        </small>
-                                    </div>
+                                <h5 className="fw-bold mb-1 text-purple">{post.title}</h5>
+                                <p className="text-muted mb-2" style={{ fontSize: "0.95rem" }}>
+                                    {post.content?.length > 70
+                                        ? post.content.substring(0, 70) + "..."
+                                        : post.content}
+                                </p>
+                                {post.category && (
+                                    <span
+                                        className="badge rounded-pill"
+                                        style={{
+                                            backgroundColor: "#e6ccff",
+                                            color: "#5a189a",
+                                            fontSize: "0.8rem",
+                                        }}
+                                    >
+                                        {post.category}
+                                    </span>
+                                )}
+                                <div className="text-end mt-3">
+                                    <small className="text-muted">
+                                        Posted by <b>{post.author?.username || "Anonymous"}</b>
+                                    </small>
                                 </div>
                             </div>
                         </div>

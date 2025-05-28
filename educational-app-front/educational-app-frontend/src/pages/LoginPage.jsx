@@ -1,10 +1,14 @@
-import { useState, useContext } from "react";
+import { useState, useEffect } from "react";
+import { useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import "../css/LoginPage.css";
 
 function LoginPage() {
     const [formData, setFormData] = useState({ username: "", password: "" });
     const [error, setError] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [darkMode, setDarkMode] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -27,29 +31,69 @@ function LoginPage() {
             login(data.access_token);
             navigate("/courses");
         } catch (err) {
-            setError("Invalid username or password");
+            setError("❌ Invalid username or password");
         }
     };
 
+    useEffect(() => {
+        document.body.classList.toggle("dark-mode", darkMode);
+        return () => {
+            document.body.classList.remove("dark-mode");
+        };
+    }, [darkMode]);
+
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-            <div className="card p-4 shadow" style={{ width: "350px" }}>
-                <h2 className="text-center mb-3">🔐 Login</h2>
+        <div className="loginpage-container">
+            <button className="theme-toggle-btn" onClick={() => setDarkMode(!darkMode)}>
+                {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
+            </button>
 
-                <input type="text" name="username" placeholder="Username" className="form-control mb-3" onChange={handleChange} />
-                <input type="password" name="password" placeholder="Password" className="form-control mb-3" onChange={handleChange} />
+            <div className="loginpage-card">
+                <h2 className="loginpage-title">🔐 Sign In to <span>EduPlatform</span></h2>
 
-                {error && <p className="text-danger text-center">{error}</p>}
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="👤 Username"
+                    className="loginpage-input"
+                    onChange={handleChange}
+                />
 
-                <button className="btn btn-primary w-100" onClick={handleLogin}>
-                    LOGIN
+                <div className="loginpage-password-wrapper">
+                    <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        placeholder="🔒 Password"
+                        className="loginpage-input"
+                        onChange={handleChange}
+                    />
+                    <span
+                    className="toggle-password"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    title={showPassword ? "Hide password" : "Show password"}
+                >
+               {showPassword ? "👁️" : "👁"}
+         </span>
+                </div>
+
+                {error && <div className="loginpage-error">{error}</div>}
+                <button
+                    className="loginpage-btn"
+                    onClick={handleLogin}
+                    style={{
+                        backgroundColor: "#5a1a8a",
+                        color: "#ffffff",
+                        border: "1px solid #47126e",
+                        padding: "10px 20px",
+                        borderRadius: "8px",
+                        fontWeight: 600,
+                    }}
+                >
+                    Login
                 </button>
-
-                <p className="text-center mt-3">
+                <p className="loginpage-register">
                     Don't have an account?{" "}
-                    <span className="text-primary" style={{ cursor: "pointer" }} onClick={() => navigate("/register")}>
-                        Register
-                    </span>
+                    <span onClick={() => navigate("/register")}>Register</span>
                 </p>
             </div>
         </div>

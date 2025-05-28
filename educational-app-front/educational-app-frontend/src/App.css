@@ -40,3 +40,41 @@ npm #root {
 .read-the-docs {
   color: #888;
 }
+.full-screen {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+body.dark-mode {
+  background-color: #121212 !important;
+  color: #f0f0f0 !important;
+}
+
+body.dark-mode .navbar {
+  background-color: #1c1c1c !important;
+  border-bottom: 1px solid #333;
+}
+
+body.dark-mode .nav-link,
+body.dark-mode .navbar-brand {
+  color: #e0e0e0 !important;
+}
+
+body.dark-mode .btn-outline-dark {
+  border-color: #999;
+  color: #eee;
+}
+
+body.dark-mode .btn-outline-dark:hover {
+  background-color: #eee;
+  color: #111;
+}
+.course-card .btn {
+  transition: background 0.2s ease;
+}
+
+.course-card .btn:hover {
+  background-color: #5936a8 !important;
+}

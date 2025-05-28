@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import { useCourseRecommendations } from "../hooks/userRecommendationsCourse";
 
 function CoursesPage() {
     const { token, role } = useContext(AuthContext);
@@ -10,26 +10,32 @@ function CoursesPage() {
     const [newCourseDescription, setNewCourseDescription] = useState("");
     const [joinCode, setJoinCode] = useState("");
     const [message, setMessage] = useState("");
+    const [darkMode, setDarkMode] = useState(
+        () => localStorage.getItem("darkMode") === "true"
+    );
+    const [showRecs, setShowRecs] = useState(false);
 
     const navigate = useNavigate();
+    const { recs, loading: recsLoading, refreshRecs } =
+        useCourseRecommendations();
 
     useEffect(() => {
-        if (!token) return;
+        document.body.style.backgroundColor = darkMode ? "#1e1e1e" : "#fefaf6";
         fetchCourses();
-    }, [token, role]);
+    }, [token, role, darkMode]);
 
     const fetchCourses = () => {
+        if (!token) return;
         const endpoint =
             role === "Student"
                 ? "http://localhost:8081/courses/my-enrolled"
                 : "http://localhost:8081/courses/my-created";
-
         fetch(endpoint, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())
-            .then((data) => setCourses(data))
-            .catch((err) => console.error("Error fetching courses:", err));
+            .then(setCourses)
+            .catch(console.error);
     };
 
     const handleCreateCourse = async () => {
@@ -37,150 +43,229 @@ function CoursesPage() {
             setMessage("⚠️ Name and description are required.");
             return;
         }
-        try {
-            const response = await fetch("http://localhost:8081/courses/add", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    name: newCourseName,
-                    description: newCourseDescription,
-                }),
-            });
-            if (response.ok) {
-                fetchCourses();
-                setMessage("Course created successfully!");
-                setNewCourseName("");
-                setNewCourseDescription("");
-            } else {
-                const errorText = await response.text();
-                setMessage(" Failed to create course: " + errorText);
-            }
-        } catch (err) {
-            setMessage("Error: " + err.message);
+        const res = await fetch("http://localhost:8081/courses/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                name: newCourseName,
+                description: newCourseDescription,
+            }),
+        });
+        const txt = await res.text();
+        setMessage(txt);
+        if (res.ok) {
+            setNewCourseName("");
+            setNewCourseDescription("");
+            fetchCourses();
         }
     };
 
     const handleJoinCourse = async () => {
         if (!joinCode) {
-            setMessage("Enter a join code.");
+            setMessage("⚠️ Enter a join code.");
             return;
         }
-
-        try {
-            const response = await fetch(`http://localhost:8081/courses/join?joinCode=${joinCode}`, {
+        const res = await fetch(
+            `http://localhost:8081/courses/join?joinCode=${joinCode}`,
+            {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
-            });
-
-            const result = await response.text();
-            setMessage(result);
-
-            if (response.ok) {
-                fetchCourses();
-                setJoinCode("");
             }
-        } catch (err) {
-            setMessage("Error: " + err.message);
+        );
+        const txt = await res.text();
+        setMessage(txt);
+        if (res.ok) {
+            setJoinCode("");
+            fetchCourses();
         }
     };
 
-    return (
+    const handleToggleRecs = () => {
+        setShowRecs((v) => !v);
+        if (!showRecs) refreshRecs();
+    };
 
-        <div className="container mt-5">
-            <Navbar />
+    return (
+        <div
+            className="container py-5"
+            style={{
+                fontFamily: "'Poppins', sans-serif",
+                color: darkMode ? "#fff" : "#333",
+            }}
+        >
+
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h1 className="fw-bold">
                     {role === "Student" ? "📚 My Courses" : "📖 Courses I Teach"}
                 </h1>
-
             </div>
 
-            {message && (
-                <div
-                    className={`alert ${
-                        message.includes("✅") ? "alert-success" : "alert-danger"
-                    } text-center`}
-                >
-                    {message}
+            {role === "Student" && (
+                <div className="col-md-6 mb-4 p-0">
+                    <div
+                        className="p-4"
+                        style={{
+                            backgroundColor: darkMode ? "#2c2c2c" : "#fffaf4",
+                            border: "1px solid #6f42c1",
+                            borderRadius: "16px",
+                        }}
+                    >
+                        <h2 style={{ color: "#6f42c1" }}>Join a Course</h2>
+                        <div className="d-flex">
+                            <input
+                                type="text"
+                                value={joinCode}
+                                onChange={(e) => setJoinCode(e.target.value)}
+                                placeholder="Enter join code..."
+                                className="form-control me-2"
+                                style={{ borderRadius: "10px" }}
+                            />
+                            <button
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#6f42c1",
+                                    color: "#fff",
+                                    borderRadius: "10px",
+                                }}
+                                onClick={handleJoinCourse}
+                            >
+                                Join
+                            </button>
+                        </div>
+                        {message && (
+                            <div className="mt-3" style={{ color: darkMode ? "#f88" : "#d00" }}>
+                                {message}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
-            <div className="row">
-                {role === "Student" && (
-                    <div className="col-md-6">
-                        <div className="card p-4 mb-4 shadow-sm border-success">
-                            <h3 className="mb-3 text-success">Join a Course</h3>
-                            <div className="input-group">
-                                <input
-                                    type="text"
-                                    placeholder="Enter join code..."
-                                    value={joinCode}
-                                    onChange={(e) => setJoinCode(e.target.value)}
-                                    className="form-control"
-                                />
-                                <button onClick={handleJoinCourse} className="btn btn-success">
-                                    Join
-                                </button>
+
+            {role === "Teacher" && (
+                <div className="col-md-6 mb-4 p-0">
+                    <div
+                        className="p-4"
+                        style={{
+                            backgroundColor: darkMode ? "#2c2c2c" : "#fffaf4",
+                            border: "1px solid #6f42c1",
+                            borderRadius: "16px",
+                        }}
+                    >
+                        <h2 style={{ color: "#6f42c1" }}>Create a New Course</h2>
+                        <input
+                            type="text"
+                            value={newCourseName}
+                            onChange={(e) => setNewCourseName(e.target.value)}
+                            placeholder="Course Name"
+                            className="form-control mb-2"
+                            style={{ borderRadius: "10px" }}
+                        />
+                        <textarea
+                            value={newCourseDescription}
+                            onChange={(e) => setNewCourseDescription(e.target.value)}
+                            placeholder="Course Description"
+                            className="form-control mb-3"
+                            style={{ borderRadius: "10px" }}
+                        />
+                        <button
+                            className="btn"
+                            style={{
+                                backgroundColor: "#6f42c1",
+                                color: "#fff",
+                                borderRadius: "10px",
+                            }}
+                            onClick={handleCreateCourse}
+                        >
+                            Add Course
+                        </button>
+                        {message && (
+                            <div className="mt-3" style={{ color: darkMode ? "#f88" : "#d00" }}>
+                                {message}
                             </div>
-                        </div>
+                        )}
                     </div>
-                )}
+                </div>
+            )}
 
-                {role === "Teacher" && (
-                    <div className="col-md-6">
-                        <div className="card p-4 mb-4 shadow-sm border-primary">
-                            <h3 className="mb-3 text-primary">Create a New Course</h3>
-                            <input
-                                type="text"
-                                placeholder="Course Name"
-                                value={newCourseName}
-                                onChange={(e) => setNewCourseName(e.target.value)}
-                                className="form-control mb-2"
-                            />
-                            <textarea
-                                placeholder="Course Description"
-                                value={newCourseDescription}
-                                onChange={(e) => setNewCourseDescription(e.target.value)}
-                                className="form-control mb-2"
-                            />
-                            <button onClick={handleCreateCourse} className="btn btn-primary w-100">
-                                Add Course
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
 
-            <h3 className="mt-4 mb-3">
+            <h4 className="mt-4 mb-3 fw-semibold">
                 {role === "Student" ? "🎓 Enrolled Courses" : "📋 My Courses"}
-            </h3>
-
+            </h4>
             {courses.length === 0 ? (
-                <p className="text-muted text-center">No courses available.</p>
+                <p className="text-muted">No courses available.</p>
             ) : (
                 <div className="row">
                     {courses.map((course) => (
-                        <div key={course.id} className="col-md-6 col-lg-4">
+                        <div className="col-md-6 col-lg-4 mb-4" key={course.id}>
                             <div
-                                className="card course-card mb-3 shadow-sm border-dark"
-                                style={{ cursor: "pointer", transition: "0.3s" }}
-                                onClick={() => navigate(`/courses/${course.id}`)}
-                                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                                className="p-3"
+                                style={{
+                                    backgroundColor: darkMode ? "#2a2a2a" : "#ffffff",
+                                    border: "1px solid #6f42c1",
+                                    borderRadius: "16px",
+                                    cursor: "pointer",
+                                }}
                             >
-                                <div className="card-body">
-                                    <h5 className="card-title">{course.name}</h5>
-                                    <p className="card-text text-muted">{course.description}</p>
-                                    <button className="btn btn-outline-dark w-100">View Course</button>
-                                </div>
+                                <h5 style={{ color: "#6f42c1" }}>{course.name}</h5>
+                                <p className="text-muted">{course.description}</p>
+                                <button
+                                    className="btn btn-sm w-100"
+                                    style={{
+                                        backgroundColor: "#6f42c1",
+                                        color: "#fff",
+                                        borderRadius: "8px",
+                                    }}
+                                    onClick={() => navigate(`/courses/${course.id}`)}
+                                >
+                                    View Course
+                                </button>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
+
+
+            {role === "Student" && (
+                <div className="mb-3">
+                    <button
+                        className="btn"
+                        onClick={handleToggleRecs}
+                        style={{
+
+                            color: "#6f42c1",
+                            borderRadius: "10px",
+                            padding: "8px 16px",
+                        }}
+                    >
+                        {showRecs ? "Hide Course Suggestions" : "Show Course Suggestions...."}
+                    </button>
+                </div>
+            )}
+
+            {/* Suggestions as plain list */}
+            {showRecs && (
+                         <div className="mb-4" style={{ maxWidth: "600px" }}>
+                               <h5>Suggested Courses:</h5>
+                              {recsLoading && <p>Loading…</p>}
+                               {!recsLoading && recs.length === 0 && (
+                                 <p className="text-muted">No suggestions at the moment.</p>
+                              )}
+                                {!recsLoading && recs.length > 0 && (
+                                 <ul className="list-unstyled" style={{ paddingLeft: 0 }}>
+                                       {recs.map((title, idx) => (
+                                         <li key={idx} style={{ margin: "0.5rem 0", lineHeight: 1 }}>
+                                               {title.trim()}
+                                             </li>
+                                      ))}
+                                     </ul>
+                             )}
+                             </div>
+                     )}
         </div>
     );
 }

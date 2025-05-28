@@ -18,7 +18,7 @@ export function FollowProvider({ children }) {
             })
             .catch((err) => console.error("Error fetching following list", err));
     }, [token, user]);
-    // 🔹 Funcția de follow
+
     const followUser = async (id) => {
         try {
             await fetch(`http://localhost:8081/follows/follow?userId=${id}`, {

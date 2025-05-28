@@ -1,38 +1,68 @@
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import "../css/HomePage.css";
 
 function HomePage() {
     const { isAuthenticated, user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
 
+    const [darkMode, setDarkMode] = useState(false);
+
+    useEffect(() => {
+        document.body.classList.toggle("dark-mode", darkMode);
+        return () => {
+            document.body.classList.remove("dark-mode");
+        };
+    }, [darkMode]);
+
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-            <div className="text-center p-5 shadow-lg rounded bg-white" style={{ width: "400px" }}>
-                <h1 className="mb-3">
-                    {isAuthenticated ? `Welcome, ${user.username}! 🎉` : "Welcome to EduPlatform! 📚"}
+        <div className="homepage-container">
+            <button className="theme-toggle-btn" onClick={() => setDarkMode(!darkMode)}>
+                {darkMode ? "🌞 Light Mode" : "🌙 Dark Mode"}
+            </button>
+
+            <div className="homepage-card">
+                <h1 className="homepage-title">
+                    {isAuthenticated ? `Welcome, ${user.username}! 🎉` : "EduPlatform"}
                 </h1>
-                <p className="text-muted">
+
+                <p className="homepage-subtitle">
                     {isAuthenticated
                         ? "Continue learning and exploring your courses."
                         : "Log in to access your personalized learning experience."}
                 </p>
 
                 {!isAuthenticated ? (
-                    <div>
-                        <button className="btn btn-primary w-100 mb-2" onClick={() => navigate("/login")}>
+                    <>
+                        <button className="homepage-btn login-btn" onClick={() => navigate("/login")}
+                                style={{
+                                    backgroundColor: "#5a1a8a",
+                                    color: "#ffffff",
+                                    border: "1px solid #47126e",
+                                    padding: "10px 20px",
+                                    borderRadius: "8px",
+                                    fontWeight: 600,
+                                }}>
                             🔑 Login
                         </button>
-                        <button className="btn btn-outline-primary w-100" onClick={() => navigate("/register")}>
+                        <button className="homepage-btn register-btn" onClick={() => navigate("/register")}
+                                style={{
+                                    backgroundColor: "#5a1a8a",
+                                    color: "#ffffff",
+                                    border: "1px solid #47126e",
+                                    padding: "10px 20px",
+                                    borderRadius: "8px",
+                                    fontWeight: 600,
+                                }}>
                             ✍️ Register
                         </button>
-                    </div>
+                    </>
                 ) : (
-                    <button className="btn btn-danger w-100" onClick={logout}>
+                    <button className="homepage-btn logout-btn" onClick={logout}>
                         🚪 Logout
                     </button>
                 )}
-
             </div>
         </div>
     );
